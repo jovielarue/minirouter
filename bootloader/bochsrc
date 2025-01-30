@@ -1,8 +1,0 @@
-megs: 32
-romimage: file=./BIOS-bochs-latest, address=0xfffe0000
-vgaromimage: file=./VGABIOS-lgpl-latest.bin
-floppya: 1_44=boot.com, status=inserted
-boot: a
-log: bochsout.txt
-mouse: enabled=0
-display_library: x, options="gui_debug"
