@@ -1,5 +1,9 @@
-//File implemented with help from the following chat:
+//File implemented with help from the following chats:
 //https://chatgpt.com/share/679bedc9-36c0-800c-869e-e537c23eb7c9
+//
+
+static mut INTERRUPT_STACK: [u8; 4096] = [0; 4096]
+
 
 /*
  * A struct to store IDT Entries within. this will eventually help to build up the interrrupt
@@ -9,7 +13,6 @@
  * https://wiki.osdev.org/Interrupt_Descriptor_Table
  */
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
 pub struct IDTEntry {
     pub offset_1: u16,  // The first offset (bits 0-15)
     pub selector: u16,  // Segment selector. Points to a valid spot in the GDT
@@ -33,13 +36,12 @@ impl IDTEntry {
         self.offset_3 = (handler >> 32) as u32; //pull out the first 32, return the rest.
 
         //setting the other entries
-        self.selector = 0x08;   //kernel code segment
-        self.ist = 0;           //reserved (must be zero)
-        self.type_attrs = 0x8E; //Interrupt gate, present, DPL = 0
-        self.zero = 0;          //reserved (must be zero)
+        self.selector = 0x08;                                   //kernel code segment
+        self.ist = INTERRUPT_STACK.as_ptr().add(4096) as u8;    //IST location in memory
+        self.type_attrs = 0x8E;                                 //Interrupt gate, present, DPL = 0
+        self.zero = 0;                                          //reserved (must be zero)
     }
 }
-
 
 /*
  * The IDT. Stores the address
@@ -78,6 +80,7 @@ impl Idt {
         idt //return the idt
     }
 
+    //loads the IDT into the itd section in memory.
     pub unsafe fn load(&self) {
         asm!(
             "lidt [{}]",
@@ -88,8 +91,28 @@ impl Idt {
 }
 
 
+//the stack frame that is pushed whenever an interrupt occurs
+#[repr(C)]
+pub struct InterruptStackFrame {
+    pub rip: u64,      // Instruction pointer (return address)
+    pub cs: u64,       // Code segment selector
+    pub rflags: u64,   // CPU flags register
+    pub rsp: u64,      // Stack pointer before the interrupt
+    pub ss: u64,       // Stack segment (only if privilege level changed)
+}
+
+
 //handlers go here
+
 extern "x86-interrupt" fn default_handler(stack_frame: &mut InterruptStackFrame) {
     //stuff to handle the interrupt here
     println!("handled interrupt: {:?}", stack_frame);
+
+    unsafe {
+        //send EOI to master PIC
+        outb(0x20, 0x20);
+
+        //send EOI to slave PIC
+        outb(0xA0, 0x20);
+    }
 }
