@@ -4,15 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+acpi = "5.1.0"
 log = "0.4.25"
 uefi = { version = "0.33.0", features = ["logger", "panic_handler"] }
+uefi-raw = "0.9.0"
 
 [[bin]]
 name = "bootloader"
-path = "main.rs"
+path = "src/main.rs"
 
 [toolchain]
-targets = ["aarch64-unknown-uefi", "i686-unknown-uefi", "x86_64-unknown-uefi"]
+targets = ["x86_64-unknown-uefi"]
 
 [unstable]
 build-std = ["core", "compiler_builtins"]
