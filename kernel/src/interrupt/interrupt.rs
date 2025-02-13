@@ -11,3 +11,9 @@ pub fn disable_interrupts() {
         asm!("cli")
     }
 }
+
+pub fn loadIDT() {
+    let idt = IDT();
+
+    idt.load();
+}

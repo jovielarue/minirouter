@@ -1,16 +1,16 @@
 [package]
-name = "rust_os"
+name = "kernel"
 version = "0.1.0"
-authors = ["Your Name <you@example.com>"]
 edition = "2021"
 
-[dependencies]
-
 [build-dependencies]
-bootimage = "0.10.2"
+uefi = "0.33.0"
 
 [profile.dev]
 panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[dependencies]
+uefi = "0.33.0"

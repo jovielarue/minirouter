@@ -2,7 +2,7 @@
 //https://chatgpt.com/share/679bedc9-36c0-800c-869e-e537c23eb7c9
 //
 
-static mut INTERRUPT_STACK: [u8; 4096] = [0; 4096]
+static mut INTERRUPT_STACK: [u8; 4096] = [0; 4096];
 
 
 /*
@@ -75,7 +75,7 @@ impl Idt {
             idt.entries[i].set_handler(default_handler as *const ());
         }
 
-        idt.base = &idt.entries[0] as *const _ as u64 //store the base address of the IDT
+        idt.base = &idt.entries[0] as *const _ as u64; //store the base address of the IDT
 
         idt //return the idt
     }
