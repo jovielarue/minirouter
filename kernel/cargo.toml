@@ -1,0 +1,16 @@
+[package]
+name = "rust_os"
+version = "0.1.0"
+authors = ["Your Name <you@example.com>"]
+edition = "2021"
+
+[dependencies]
+
+[build-dependencies]
+bootimage = "0.10.2"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
