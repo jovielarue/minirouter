@@ -26,8 +26,10 @@ use uefi::fs::FileSystem;
 use uefi::proto::media::fs::SimpleFileSystem;
 use uefi::boot::{self, ScopedProtocol};
 use uefi::Error;
+use core::arch::asm;
 
-const KERNEL_LOCATION: &str = "\\EFI\\router_os\\kernel.bin"; 
+const KERNEL_LOCATION: &str = "\\EFI\\router_os\\kernel.bin";
+const KERNEL_STACK_SIZE: usize = 8 * 1024 * 1024; //8MB
 
 #[entry]
 fn main() -> Status {
@@ -49,24 +51,34 @@ fn main() -> Status {
     info!("Kernel file loaded: {} bytes", buffer.len());
 
     //allocate memory for the kernel, and get the address
-    
     if let Some(kernel_addr) = allocate_kernel_mem(&buffer) {
         info!("Kernel address: {:p}", kernel_addr);
     
-        unsafe {
-            let entry_fn: extern "C" fn() -> ! = core::mem::transmute(kernel_addr);
-            
-            // let addr = kernel_addr;
-            // info!("Bytes after entry point:");
-            // for i in 0..16 {
-            //     info!("{:#x}: {:#x}", addr.offset(i) as usize, *addr.offset(i));
-            // }
+        //allocation was good, initialize the stack
+        match setup_kernel_stack() {
+            Ok(stack_ptr) => unsafe {
+                let entry_fn: extern "C" fn() -> ! = core::mem::transmute(kernel_addr);
                 
-            info!("Entering entry function now...");
-            // let _mem = boot::exit_boot_services(MemoryType::LOADER_DATA);
-
-            entry_fn();
+                //load the stack pointer into the rsp
+                asm!("mov rsp, {}", in(reg) stack_ptr);
+                
+                // let addr = kernel_addr;
+                // info!("Bytes after entry point:");
+                // for i in 0..16 {
+                //     info!("{:#x}: {:#x}", addr.offset(i) as usize, *addr.offset(i));
+                // }
+                    
+                info!("Entering entry function now...");
+                // let _mem = boot::exit_boot_services(MemoryType::LOADER_DATA);
+    
+                entry_fn();
+            },
+            Err(err) => {
+                info!("ERROR could not setup the kernel stack: {:?}", err.data());
+                return Status::LOAD_ERROR;
+            }
         }
+
     } else {
         info!("The kernel failed to be parsed");
         Status::ABORTED
@@ -278,6 +290,28 @@ fn load_elf_segments(buffer: &[u8], ph_table: &[Elf64Phdr]) -> Result<(), uefi::
     Ok(())
 }
 
+
+fn setup_kernel_stack() -> Result<*mut u8, uefi::Error> {
+    let num_pages = (KERNEL_STACK_SIZE + PAGE_SIZE - 1) / PAGE_SIZE;
+
+    //allocate the stack memory, and return a pointer to it, if the value was good
+    match boot::allocate_pages(
+        boot::AllocateType::AnyPages,
+        MemoryType::LOADER_DATA,
+        num_pages
+    ) {
+        Ok(stack_addr) => {
+            log::info!("Allocated stack at: {:#x}", stack_addr.as_ptr() as usize);
+            let stack_top = unsafe { stack_addr.as_ptr().add(KERNEL_STACK_SIZE) };
+            log::info!("Stack top (initial SP): {:#x}", stack_top as usize);
+            Ok(stack_top)
+        },
+        Err(err) => {
+            log::error!("Failed to allocate stack: {:?}", err);
+            Err(err)
+        },
+    }
+}
 
 // mod cfg_table_type;
 // mod identify_acpi_handler;
