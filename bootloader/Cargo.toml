@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 log = "0.4.26"
 uefi = { version = "0.34.1", features = ["panic_handler", "logger", "alloc"] }
+x86_64 = "0.15.2"
 
 [unstable]
 build-std-features = ["compiler-builtins-mem"]

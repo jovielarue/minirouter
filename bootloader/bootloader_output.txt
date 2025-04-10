@@ -1,0 +1,42 @@
+[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01HBdsDxe: failed to load Boot0001 "UEFI QEMU DVD-ROM QM00003 " from PciRoot(0x0)/Pci(0x1,0x1)/Ata(Secondary,Master,0x0): Not Found
+BdsDxe: loading Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1,0x1)/Ata(Primary,Master,0x0)
+BdsDxe: starting Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1,0x1)/Ata(Primary,Master,0x0)
+[ INFO]:  src/main.rs@046: Hello world!
+[ INFO]:  src/main.rs@060: Kernel file loaded: 2337312 bytes
+[ INFO]:  src/main.rs@197: number of program headers: 6
+[ INFO]:  src/main.rs@242: PH 0: Type = 6, Offset = 0x40, VAddr = 0x200040, memsz: 336, endAddr: 0x200190
+[ INFO]:  src/main.rs@242: PH 1: Type = 1, Offset = 0x0, VAddr = 0x200000, memsz: 936, endAddr: 0x2003a8
+[ INFO]:  src/main.rs@252: loading segment 1 into memory...
+[ INFO]:  src/main.rs@309: loaded segment at 0x200000 with 1 pages, size: 936 bytes (mem size: 936 bytes)
+[ INFO]:  src/main.rs@242: PH 2: Type = 1, Offset = 0x3b0, VAddr = 0x2013b0, memsz: 3254, endAddr: 0x202066
+[ INFO]:  src/main.rs@252: loading segment 2 into memory...
+[ INFO]:  src/main.rs@309: loaded segment at 0x2013b0 with 2 pages, size: 3254 bytes (mem size: 3254 bytes)
+[ INFO]:  src/main.rs@242: PH 3: Type = 1, Offset = 0x1068, VAddr = 0x203068, memsz: 3992, endAddr: 0x204000
+[ INFO]:  src/main.rs@252: loading segment 3 into memory...
+[ INFO]:  src/main.rs@309: loaded segment at 0x203068 with 1 pages, size: 192 bytes (mem size: 3992 bytes)
+[ INFO]:  src/main.rs@242: PH 4: Type = 1685382482, Offset = 0x1068, VAddr = 0x203068, memsz: 3992, endAddr: 0x204000
+[ INFO]:  src/main.rs@242: PH 5: Type = 1685382481, Offset = 0x0, VAddr = 0x0, memsz: 0, endAddr: 0x0
+[ INFO]:  src/main.rs@064: Kernel address: 0x2013b0
+[ INFO]:  src/main.rs@329: Allocated stack at: 0x569b000
+[ INFO]:  src/main.rs@331: Stack top (initial SP): 0x5e9b000
+[ INFO]:  src/main.rs@093: RIP: 0x60dc626
+[ INFO]:  src/main.rs@096: Entering entry function now...
+!!!! X64 Exception Type - 0D(#GP - General Protection)  CPU Apic ID - 00000000 !!!!
+ExceptionData - 0000000000000000
+RIP  - 00000000060DC88E, CS  - 0000000000000038, RFLAGS - 0000000000010002
+RAX  - 000F001100400006, RCX - 0000000005E9B4B8, RDX - 000000000000007A
+RBX  - 0000000000000000, RSP - 0000000005E9B000, RBP - 0000000006253918
+RSI  - 0000000000000002, RDI - 000000000690BD18
+R8   - 0000000000000001, R9  - 0000000000000D05, R10 - 0000000006151018
+R11  - 00000000D03D2637, R12 - 0000000006E38F3C, R13 - 0000000000000000
+R14  - 0000000000000000, R15 - 0000000006119018
+DS   - 0000000000000030, ES  - 0000000000000030, FS  - 0000000000000030
+GS   - 0000000000000030, SS  - 0000000000000030
+CR0  - 0000000080010033, CR2 - 0000000000000000, CR3 - 0000000007C01000
+CR4  - 0000000000000668, CR8 - 0000000000000000
+DR0  - 0000000000000000, DR1 - 0000000000000000, DR2 - 0000000000000000
+DR3  - 0000000000000000, DR6 - 00000000FFFF0FF0, DR7 - 0000000000000400
+GDTR - 00000000079DC000 0000000000000047, LDTR - 0000000000000000
+IDTR - 0000000007455018 0000000000000FFF,   TR - 0000000000000000
+FXSAVE_STATE - 0000000005E9AC60
+!!!! Find image based on IP(0x60DC88E) bootloader-34c4816678fcb2a2.pdb (ImageBase=00000000060D6000, EntryPoint=00000000060DBFF0) !!!!
