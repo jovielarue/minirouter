@@ -7,7 +7,8 @@
     && qemu-system-x86_64 -enable-kvm \
      -drive if=pflash,format=raw,readonly=on,file=OVMF_CODE.fd \
      -drive if=pflash,format=raw,readonly=on,file=OVMF_VARS.fd \
-     -drive format=raw,file=fat:rw:esp
+     -drive format=raw,file=fat:rw:esp \
+     -serial file:bootloader_output.txt
  */
 
 extern crate alloc;
@@ -17,6 +18,9 @@ use uefi::allocator::Allocator;
 #[global_allocator]
 static ALLOCATOR: Allocator = Allocator;
 
+mod serial_output;
+
+use serial_output::SerialPort;
 use log::info;
 use alloc::vec::Vec;
 use uefi::boot::MemoryType;
@@ -33,11 +37,16 @@ const KERNEL_STACK_SIZE: usize = 8 * 1024 * 1024; //8MB
 
 #[entry]
 fn main() -> Status {
-    uefi::helpers::init().unwrap();
+    uefi::helpers::init().expect("uefi helper functions could not be initialized");
+
+    //initialize the serial port to get output to a the host    
+    let mut port = SerialPort::new(serial_output::COM1);
+    port.init();
+    
     info!("Hello world!");
     
     //attempt to convert the kernel location to a cstring.
-    let path: CString16 = CString16::try_from(KERNEL_LOCATION).unwrap();
+    let path: CString16 = CString16::try_from(KERNEL_LOCATION).expect("kernel location could not be determined");
 
     //read in the kernel file and store it in a buffer
     let buffer: Vec<u8> = match read_in_kernel(path) {
@@ -58,19 +67,35 @@ fn main() -> Status {
         match setup_kernel_stack() {
             Ok(stack_ptr) => unsafe {
                 let entry_fn: extern "C" fn() -> ! = core::mem::transmute(kernel_addr);
-                
+
                 //load the stack pointer into the rsp
                 asm!("mov rsp, {}", in(reg) stack_ptr);
+
+                // let rsp: u64;
+                // asm!("mov {}, rsp", out(reg) rsp);
+                // info!("RSP before call: {:#x}", rsp);
                 
                 // let addr = kernel_addr;
                 // info!("Bytes after entry point:");
                 // for i in 0..16 {
                 //     info!("{:#x}: {:#x}", addr.offset(i) as usize, *addr.offset(i));
                 // }
+                
+                //set the cpu mode to long mode
+                // asm!(
+                //     "mov rcx, 0xC0000080",
+                //     "rdmsr"
+                // );
                     
+                let rip: u64;
+                asm!("lea {}, [rip]", out(reg) rip);
+
+                info!("RIP: {:#x}", rip);
+
+                //exit the boot services and enter into the entry function
                 info!("Entering entry function now...");
-                // let _mem = boot::exit_boot_services(MemoryType::LOADER_DATA);
-    
+                let _mem = boot::exit_boot_services(MemoryType::LOADER_DATA);
+                
                 entry_fn();
             },
             Err(err) => {
@@ -88,11 +113,11 @@ fn main() -> Status {
 
 fn read_in_kernel(path: CString16) -> Result<Vec<u8>, Error> {
     //open the filesystem to the root
-    let fs_handle: ScopedProtocol<SimpleFileSystem> = boot::get_image_file_system(boot::image_handle()).unwrap();
+    let fs_handle: ScopedProtocol<SimpleFileSystem> = boot::get_image_file_system(boot::image_handle())?;
     let mut fs: FileSystem = FileSystem::new(fs_handle);
 
     //attempt to open the kernel binary
-    let buffer: Vec<u8>  = fs.read(path.as_ref()).unwrap();
+    let buffer: Vec<u8>  = fs.read(path.as_ref()).expect("Kernel could not be read into the buffer.");
 
     Ok(buffer)
 }
@@ -216,7 +241,9 @@ fn load_elf_segments(buffer: &[u8], ph_table: &[Elf64Phdr]) -> Result<(), uefi::
     for (i, ph) in ph_table.iter().enumerate() {
         info!("PH {}: Type = {}, Offset = 0x{:x}, VAddr = 0x{:x}, memsz: {}, endAddr: 0x{:x}",
             i, ph.p_type, ph.p_offset, ph.p_vaddr, ph.p_memsz,
-            unsafe { (ph.p_vaddr as *const u8).offset(ph.p_memsz.try_into().unwrap()) as u64 }
+            unsafe {
+                (ph.p_vaddr as *const u8).offset(ph.p_memsz.try_into().expect("memz could not be converted")) as u64 
+            }
         );
         
         //only the segments labelled LOAD need to be loaded
